@@ -251,8 +251,6 @@ function createChannel(io, channelName) {
                 role : 'admin',
                 params : [ 'nick', 'message' ],
                 handler : function(dao, dbuser, params) {
-               	    if (params.nick != "10.17.19.25")
-               	    {
                     return dao.findUser(params.nick).then(function(dbuser){
                         return dao.getChannelInfo(channelName).then(function(info){
                             var msg = params.message.length > 1 ? ': ' + params.message.trim() : '';
@@ -261,7 +259,15 @@ function createChannel(io, channelName) {
                             var stats = grab(nick);
                             if(stats == -1){
                                 access = JSON.parse(info.access);
-                                stats = GetInfo(nick);
+                                if(!access[nick]){
+                                    errorMessage(nick + ' has not joined since the last update and is not online.');
+                                    return false;
+                                } else {
+                                    return {
+                                        "role":access[nick].role,
+                                        "access_level":access[nick].access_level
+                                    }
+                                }
                             }
                             if(roles.indexOf(user.role) < roles.indexOf(stats.role)){
                                 permit = 1
@@ -283,7 +289,6 @@ function createChannel(io, channelName) {
                             }
                         });
                     });
-               	    }
                 }
             },
             unban : {
